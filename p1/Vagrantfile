@@ -1,0 +1,53 @@
+#provider
+PROVIDER = "vmware_desktop"
+
+#Image name
+IMAGE_NAME = "bento/ubuntu-22.04"
+
+# the resource limits
+CPU = 1
+MEMORY = 1024
+
+# The server machine data
+SERVER_IP = "192.168.56.110"
+SERVER_PORT = "2222"
+SERVER_HOST_NAME = "midfathS"
+SERVER_MACHINE_NAME = "midfathS"
+
+# The worker machine data
+WORKER_IP = "192.168.56.111"
+WORKER_PORT = "2223"
+WORKER_HOST_NAME = "midfathSW"
+WORKER_MACHINE_NAME = "midfathSW"
+
+Vagrant.configure("2") do |config|
+  config.vm.box = IMAGE_NAME
+  config.vm.provider :PROVIDER
+  
+  #--------------------------------------------------------------For the SSL Warning 
+  config.vm.box_download_insecure = true
+
+  # Define the midfathS the server machine
+  config.vm.define SERVER_MACHINE_NAME do |mServer|
+    mServer.vm.hostname = SERVER_HOST_NAME
+    mServer.vm.network "forwarded_port", guest: 22, host: SERVER_PORT, id: "ssh"
+    mServer.vm.network "private_network", ip: SERVER_IP
+
+    mServer.vm.provider PROVIDER do |provider|
+      provider.memory = MEMORY
+      provider.cpus = CPU
+    end
+  end
+
+  config.vm.define WORKER_MACHINE_NAME do |mWorker|
+    mWorker.vm.hostname = WORKER_MACHINE_NAME
+    mWorker.vm.network "forwarded_port", guest: 22, host: WORKER_PORT, id: "ssh"
+    mWorker.vm.network "private_network", ip: WORKER_IP
+
+    mWorker.vm.provider PROVIDER do |provider|
+      provider.memory = MEMORY
+      provider.cpus = CPU
+    end
+  end
+
+end
