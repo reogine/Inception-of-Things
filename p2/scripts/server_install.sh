@@ -15,13 +15,3 @@ else
     echo -e "${RED}K3s MASTER installation FAILED${RESET}"
     exit 1
 fi
-
-# 3. Save the token for the Worker
-# We save it to /vagrant so the Worker VM can see it
-sudo cat /var/lib/rancher/k3s/server/node-token > /vagrant/token.env
-
-if [ -f /vagrant/token.env ]; then
-    echo -e "${GREEN}TOKEN SUCCESSFULLY SAVED${RESET}"
-else
-    echo -e "${RED}TOKEN SAVING FAILED${RESET}"
-fi

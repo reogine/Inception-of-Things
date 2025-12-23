@@ -5,20 +5,14 @@ PROVIDER = "vmware_desktop"
 IMAGE_NAME = "bento/ubuntu-22.04"
 
 # the resource limits
-CPU = 1
-MEMORY = 1024
+CPU = 2
+MEMORY = 2048
 
 # The server machine data
 SERVER_IP = "192.168.56.110"
 SERVER_PORT = "2222"
 SERVER_HOST_NAME = "midfathS"
 SERVER_MACHINE_NAME = "midfathS"
-
-# The worker machine data
-WORKER_IP = "192.168.56.111"
-WORKER_PORT = "2223"
-WORKER_HOST_NAME = "midfathSW"
-WORKER_MACHINE_NAME = "midfathSW"
 
 Vagrant.configure("2") do |config|
   config.vm.box = IMAGE_NAME
@@ -38,19 +32,5 @@ Vagrant.configure("2") do |config|
       provider.cpus = CPU
     end
     mServer.vm.provision "shell", path: "scripts/server_install.sh"
-    
   end
-
-  config.vm.define WORKER_MACHINE_NAME do |mWorker|
-    mWorker.vm.hostname = WORKER_MACHINE_NAME
-    mWorker.vm.network "forwarded_port", guest: 22, host: WORKER_PORT, id: "ssh"
-    mWorker.vm.network "private_network", ip: WORKER_IP
-
-    mWorker.vm.provider PROVIDER do |provider|
-      provider.memory = MEMORY
-      provider.cpus = CPU
-    end
-   mWorker.vm.provision "shell", path: "scripts/agent_install.sh"
-  end
-
 end
