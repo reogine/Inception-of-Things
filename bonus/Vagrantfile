@@ -1,0 +1,48 @@
+PROVIDER="virtualbox"
+IMAGE_NAME="generic/alpine318"
+
+CPU=4
+MEMORY=4096
+
+VM_Name="zlafouS"
+VM_Host_Name="zlafouS"
+VM_IP="192.168.56.110"
+
+Vagrant.configure("2") do |config|
+
+    # Define the VM base image    
+    server.vm.box = IMAGE_NAME
+
+    # Configure VM resources
+    server.vm.provider PROVIDER do |v|
+        v.name = VM_Name
+        v.cpu = CPU
+        v.memory = MEMORY
+    end
+
+    # Configure VM network and hostname    
+    config.vm.define "zserver" do |server|
+        server.vm.hostname = VM_Host_Name
+        server.vm.network "private_network", ip: VM_IP
+    end
+
+    # Port Forwarding
+    server.vm.network "forwarded_port", guest: 8081, host: 18081, host_ip: "127.0.0.1", id: "argocd"
+    server.vm.network "forwarded_port", guest: 8082, host: 18082, host_ip: "127.0.0.1", id: "gitlab"
+    server.vm.network "forwarded_port", guest: 8083, host: 18083, host_ip: "127.0.0.1", id: "app"
+
+    # Sync the current directory to /shared in the VM
+    server.vm.sync_folder ".", "/shared", type: "virtualbox"
+
+
+    # Provisioning script
+    server.vm.provision "shell", inline: <<-SHELL
+        set -euo pipefail
+
+        cd /shared
+        chmod +x bonus/*.sh
+
+        scripts/bootstrap.sh
+    SHELL
+end
+
