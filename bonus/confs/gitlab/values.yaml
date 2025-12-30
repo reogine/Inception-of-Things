@@ -1,0 +1,26 @@
+global:
+  edition: ce
+  hosts:
+    domain: gitlab.local
+    https: false
+    ingress:
+      configureCertmanager: false
+      class: traefik
+      annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: web
+
+ngnix-ingress:
+  enabled: false
+
+certmanager:
+  install: false
+
+prometheus:
+  install: false
+
+gitlab-runner:
+  install: false
+
+gitlab:
+  kas:
+    enabled: false
