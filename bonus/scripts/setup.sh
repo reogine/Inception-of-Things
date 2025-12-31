@@ -56,7 +56,8 @@ if kubectl get deploy -n argocd argocd-server >/dev/null 2>&1; then
     info "Argo CD appears to be already installed. Skipping installation."
 else
     kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml >/dev/null 2>&1
-    kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort", "ports": [{"port": 80, "nodePort": 30081}, {"port": 443, "nodePort": 30443}]}}'
+    kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort", "ports": [{"port": 80, "nodePort": 30081}, {"port": 443, "nodePort": 30443}]}}' >/dev/null 2>&1
+    info "Waiting for Argo CD components to be ready..."
     kubectl wait --for=condition=Available deploy/argocd-server -n argocd --timeout=300s >/dev/null 2>&1
     kubectl wait --for=condition=Ready pods -n argocd --all --timeout=300s >/dev/null 2>&1
     success "Argo CD installed successfully in the 'argocd' namespace."
