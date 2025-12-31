@@ -1,8 +1,8 @@
 PROVIDER="virtualbox"
 IMAGE_NAME="bento/ubuntu-22.04"
 
-CPU=2
-MEMORY=4096
+CPU=4
+MEMORY=1024 * 7  # 7 GB
 
 VM_Name="zlafouS"
 VM_Host_Name="zlafouS"
@@ -30,15 +30,15 @@ Vagrant.configure("2") do |config|
         server.vm.network "forwarded_port", guest: 8082, host: 18082, host_ip: "127.0.0.1", id: "gitlab"
         server.vm.network "forwarded_port", guest: 8083, host: 18083, host_ip: "127.0.0.1", id: "app"
 
-        # Sync the current directory to /shared in the VM
-        server.vm.sync_folder ".", "/shared", type: "virtualbox"
-
+        # Copy scripts and confs
+        server.vm.provision "file", source: "scripts", destination: "/home/vagrant/scripts"
+        server.vm.provision "file", source: "confs", destination: "/home/vagrant/confs"
 
         # Provisioning script
         server.vm.provision "shell", inline: <<-SHELL
             set -euo pipefail
 
-            cd /shared
+            cd /home/vagrant
             chmod +x scripts/*.sh
 
             scripts/bootstrap.sh

@@ -6,6 +6,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
 
@@ -53,9 +54,9 @@ frame() {
     
     local line=$(printf '%*s' "$line_len" '' | sed "s/ /═/g")
     
-    echo -e "${BOLD}${CYAN}╔${line}╗${RESET}"
-    echo -e "${BOLD}${CYAN}║${padding}${RESET}${message}${BOLD}${CYAN}${padding}║${RESET}"
-    echo -e "${BOLD}${CYAN}╚${line}╝${RESET}"
+    echo -e "${BOLD}${MAGENTA}╔${line}╗${RESET}"
+    echo -e "${BOLD}${MAGENTA}║${padding}${MAGENTA}${message}${BOLD}${MAGENTA}${padding}║${RESET}"
+    echo -e "${BOLD}${MAGENTA}╚${line}╝${RESET}"
 }
 
 services_table() {
@@ -77,7 +78,7 @@ services_table() {
     local user="${3:-}"
     local pass="${4:-}"
     
-    local width=60
+    local width=74
     local line_content=$(printf '%*s' "$((width - 2))" '' | sed "s/ /═/g")
     local sep_content=$(printf '%*s' "$((width - 2))" '' | sed "s/ /─/g")
 
@@ -92,7 +93,7 @@ services_table() {
         local padding=$((width - text_len - 4))
         if [ $padding -lt 0 ]; then padding=0; fi
         local pad_str=$(printf '%*s' "$padding" '')
-        echo -e "${BOLD}${CYAN}║ ${color}${label}: ${RESET}${value}${pad_str}${BOLD}${CYAN} ║${RESET}"
+        echo -e "${BOLD}${MAGENTA}║ ${color}${label}: ${RESET}${value}${pad_str}${BOLD}${MAGENTA} ║${RESET}"
     }
     
     # Helper for headers
@@ -100,17 +101,17 @@ services_table() {
         local title="$1"
         local padding=$((width - ${#title} - 4))
         local pad_str=$(printf '%*s' "$padding" '')
-        echo -e "${BOLD}${CYAN}║ ${BOLD}${title}${pad_str}${BOLD}${CYAN} ║${RESET}"
+        echo -e "${BOLD}${MAGENTA}║ ${BOLD}${title}${pad_str}${BOLD}${MAGENTA} ║${RESET}"
     }
 
     if [ "$start" = true ]; then
-        echo -e "${BOLD}${CYAN}╔${line_content}╗${RESET}"
+        echo -e "${BOLD}${MAGENTA}╔${line_content}╗${RESET}"
         local title="SERVICES"
         local padding=$(( (width - 2 - ${#title}) / 2 ))
         local pad_str=$(printf '%*s' "$padding" '')
-        echo -e "${BOLD}${CYAN}║${pad_str}${BOLD}${title}${RESET}${BOLD}${CYAN}${pad_str}║${RESET}"
+        echo -e "${BOLD}${MAGENTA}║${pad_str}${BOLD}${title}${RESET}${BOLD}${MAGENTA}${pad_str}║${RESET}"
     elif [ -n "$name" ]; then
-        echo -e "${BOLD}${CYAN}╟${sep_content}╢${RESET}"
+        echo -e "${BOLD}${MAGENTA}╟${sep_content}╢${RESET}"
     fi
 
     if [ -n "$name" ]; then
@@ -121,7 +122,7 @@ services_table() {
     fi
 
     if [ "$end" = true ]; then
-        echo -e "${BOLD}${CYAN}╚${line_content}╝${RESET}"
+        echo -e "${BOLD}${MAGENTA}╚${line_content}╝${RESET}"
     fi
 }
 

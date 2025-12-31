@@ -12,7 +12,6 @@ info "Setting up Docker service..."
 if  command -v docker >/dev/null 2>&1
 then
     systemctl enable --now docker
-    usermod -aG docker $USER
     success "Docker service is enabled and started."
 else
     error "Docker is not installed."
@@ -24,13 +23,13 @@ info "Setting up k3d cluster..."
 if command -v k3d >/dev/null 2>&1
 then
     if k3d cluster list | grep -q "^${CLUSTER_NAME} "; then
-        warn "k3d cluster '${CLUSTER_NAME}' already exists. Skipping creation."
+        info "k3d cluster '${CLUSTER_NAME}' already exists. Skipping creation."
     else
         k3d cluster create "${CLUSTER_NAME}" \
             --api-port 6550 \
-            -p "8081:8080@loadbalancer" \
+            -p "8081:30081@server:0" \
             -p "8082:80@loadbalancer" \
-            -p "8083:8888@loadbalancer" \
+            -p "8083:30083@server:0" \
             --agents 2 \
             --wait >/dev/null 2>&1
         success "k3d cluster '${CLUSTER_NAME}' created successfully."
@@ -51,29 +50,41 @@ for ns in "${NAMESPACES[@]}"; do
     fi
 done
 
-# Install GitLab
-info "Installing GitLab in the cluster..."
-helm repo add gitlab https://charts.gitlab.io/ >/dev/null 2>&1
-helm repo update >/dev/null 2>&1
-helm upgrade --install gitlab gitlab/gitlab \
-    -n gitlab \
-    -f ./confs/gitlab/values.yaml \
-    --timeout 600s \
-    --wait >/dev/null 2>&1
-success "GitLab installed successfully in the 'gitlab' namespace."
-
 # Install Argo CD
 info "Installing Argo CD in the cluster..."
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml >/dev/null 2>&1
-kubectl wait --for=condition=Available deploy/argocd-server -n argocd --timeout=300s >/dev/null 2>&1
-kubectl wait --for=condition=Ready pods -n argocd --all --timeout=300s >/dev/null 2>&1
-success "Argo CD installed successfully in the 'argocd' namespace."
+if kubectl get deploy -n argocd argocd-server >/dev/null 2>&1; then
+    info "Argo CD appears to be already installed. Skipping installation."
+else
+    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml >/dev/null 2>&1
+    kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort", "ports": [{"port": 80, "nodePort": 30081}, {"port": 443, "nodePort": 30443}]}}'
+    kubectl wait --for=condition=Available deploy/argocd-server -n argocd --timeout=300s >/dev/null 2>&1
+    kubectl wait --for=condition=Ready pods -n argocd --all --timeout=300s >/dev/null 2>&1
+    success "Argo CD installed successfully in the 'argocd' namespace."
+fi
 
 # Apply Argo CD Application config
-info "Applying Argo CD Application config..."
-kubectl apply -n argocd -f ./confs/argocd/application.yaml >/dev/null 2>&1
-success "Argo CD Application config applied successfully."
+if kubectl get application -n argocd iot-app >/dev/null 2>&1; then
+    info "Argo CD Application 'iot-app' already exists. Skipping application."
+else
+    info "Applying Argo CD Application config..."
+    kubectl apply -n argocd -f ./confs/argocd/application.yaml >/dev/null 2>&1
+    success "Argo CD Application config applied successfully."
+fi
 
+# Install GitLab
+if kubectl get deploy -n gitlab gitlab-webservice-default >/dev/null 2>&1; then
+    info "GitLab appears to be already installed. Skipping installation."
+else    
+    info "Installing GitLab in the cluster..."
+    helm repo add gitlab https://charts.gitlab.io/ >/dev/null 2>&1
+    helm repo update >/dev/null 2>&1
+    helm upgrade --install gitlab gitlab/gitlab \
+        -n gitlab \
+        -f ./confs/gitlab/values.yaml \
+        --timeout 1200s \
+        --wait >/dev/null 2>&1
+    success "GitLab installed successfully in the 'gitlab' namespace."
+fi
 
 success "Setup completed successfully."
 echo ""
@@ -84,7 +95,7 @@ GITLAB_PASS=$(kubectl -n gitlab get secret gitlab-gitlab-initial-root-password -
 
 # Display services table
 services_table --start
-services_table "ArgoCD" "http://localhost:8081" "admin" "$ARGOCD_PASS"
-services_table "GitLab" "http://localhost:8082" "root" "$GITLAB_PASS"
-services_table "App" "http://localhost:8083" "" ""
+services_table "ArgoCD" "http://localhost:18081" "admin" "$ARGOCD_PASS"
+services_table "GitLab" "http://localhost:18082" "root" "$GITLAB_PASS"
+services_table "App" "http://localhost:18083" "" ""
 services_table --end

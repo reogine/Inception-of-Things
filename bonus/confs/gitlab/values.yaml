@@ -1,19 +1,24 @@
 global:
   edition: ce
   hosts:
-    domain: gitlab.local
+    domain: localhost
     https: false
-    ingress:
-      configureCertmanager: false
-      class: traefik
-      annotations:
-        traefik.ingress.kubernetes.io/router.entrypoints: web
+  ingress:
+    configureCertmanager: false
+    class: traefik
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: web
+  kas:
+    enabled: false
+  spamcheck:
+    enabled: false
+  grafana:
+    enabled: false
 
-ngnix-ingress:
+nginx-ingress:
   enabled: false
 
-certmanager:
-  install: false
+installCertmanager: false
 
 prometheus:
   install: false
@@ -22,5 +27,23 @@ gitlab-runner:
   install: false
 
 gitlab:
-  kas:
-    enabled: false
+  webservice:
+    minReplicas: 1
+    maxReplicas: 1
+    workerProcesses: 2
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 300m
+  sidekiq:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 300m
+  gitlab-shell:
+    minReplicas: 1
+    maxReplicas: 1
+  toolbox:
+    replicas: 1
