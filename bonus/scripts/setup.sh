@@ -82,7 +82,6 @@ else
     helm upgrade --install gitlab gitlab/gitlab \
         -n gitlab \
         -f ./confs/gitlab/values.yaml \
-        --timeout 1200s \
         --wait >/dev/null 2>&1
     success "GitLab installed successfully in the 'gitlab' namespace."
 fi
@@ -97,6 +96,6 @@ GITLAB_PASS=$(kubectl -n gitlab get secret gitlab-gitlab-initial-root-password -
 # Display services table
 services_table --start
 services_table "ArgoCD" "http://localhost:18081" "admin" "$ARGOCD_PASS"
-services_table "GitLab" "http://localhost:18082" "root" "$GITLAB_PASS"
+services_table "GitLab" "http://gitlab.localhost:18082" "root" "$GITLAB_PASS"
 services_table "App" "http://localhost:18083" "" ""
 services_table --end
