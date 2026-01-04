@@ -82,6 +82,7 @@ else
     helm upgrade --install gitlab gitlab/gitlab \
         -n gitlab \
         -f ./confs/gitlab/values.yaml \
+        --timeout 1200s \
         --wait >/dev/null 2>&1
     success "GitLab installed successfully in the 'gitlab' namespace."
 fi
